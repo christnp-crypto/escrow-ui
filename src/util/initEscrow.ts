@@ -1,12 +1,29 @@
-import { AccountLayout, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Account, Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { 
+    AccountLayout, 
+    Token, 
+    TOKEN_PROGRAM_ID, 
+    u64
+} from "@solana/spl-token";
+import { 
+    Account, 
+    Connection, 
+    PublicKey, 
+    SystemProgram, 
+    SYSVAR_RENT_PUBKEY, 
+    Transaction, 
+    TransactionInstruction 
+} from "@solana/web3.js";
 import BN from "bn.js";
-import { ESCROW_ACCOUNT_DATA_LAYOUT, EscrowLayout } from "./layout";
+import { 
+    ESCROW_ACCOUNT_DATA_LAYOUT, 
+    EscrowLayout 
+} from "./layout";
+import * as borsh from 'borsh'; // NC added borsh
 
 const connection = new Connection("http://localhost:8899", 'singleGossip');
 
 export const initEscrow = async (
-    privateKeyByteArray: string,
+    privateKeyByteArray:  string,
     initializerXTokenAccountPubkeyString: string,
     amountXTokensToSendToEscrow: number,
     initializerReceivingTokenAccountPubkeyString: string,
@@ -62,14 +79,75 @@ export const initEscrow = async (
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const encodedEscrowState = (await connection.getAccountInfo(escrowAccount.publicKey, 'singleGossip'))!.data;
-    const decodedEscrowState = ESCROW_ACCOUNT_DATA_LAYOUT.decode(encodedEscrowState) as EscrowLayout;
+
+    // const encodedEscrowState = (await connection.getAccountInfo(escrowAccount.publicKey, 'singleGossip'))!.data;
+    // const decodedEscrowState = ESCROW_ACCOUNT_DATA_LAYOUT.decode(encodedEscrowState) as EscrowLayout;
+    // return {
+    //     escrowAccountPubkey: escrowAccount.publicKey.toBase58(),
+    //     isInitialized: !!decodedEscrowState.isInitialized,
+    //     initializerAccountPubkey: new PublicKey(decodedEscrowState.initializerPubkey).toBase58(),
+    //     XTokenTempAccountPubkey: new PublicKey(decodedEscrowState.initializerTempTokenAccountPubkey).toBase58(),
+    //     initializerYTokenAccount: new PublicKey(decodedEscrowState.initializerReceivingTokenAccountPubkey).toBase58(),
+    //     expectedAmount: new BN(decodedEscrowState.expectedAmount, 10, "le").toNumber()
+    // };
+
+    /* playing with borsh */
+    /**
+     * Borsh schema definition for greeting accounts
+     */
+    // The state of a greeting account managed by the hello world program
+    class EscrowAccount {
+        isInitialized = false;
+        escrowAccountPubkey = new PublicKey(0);
+        initializerAccountPubkey = new PublicKey(0);
+        XTokenTempAccountPubkey = new PublicKey(0);
+        initializerYTokenAccount  = new PublicKey(0);
+        expectedAmount = 0;
+        constructor(fields: {
+            isInitialized: boolean, 
+            escrowAccountPubkey: PublicKey, 
+            initializerAccountPubkey: PublicKey, 
+            XTokenTempAccountPubkey: PublicKey, 
+            initializerYTokenAccount: PublicKey, 
+            expectedAmount: number} | undefined = undefined
+            ) {
+            if (fields) {
+                this.isInitialized = fields.isInitialized;
+                this.escrowAccountPubkey = fields.escrowAccountPubkey;
+                this.initializerAccountPubkey = fields.initializerAccountPubkey;
+                this.XTokenTempAccountPubkey = fields.XTokenTempAccountPubkey;
+                this.initializerYTokenAccount = fields.initializerYTokenAccount;
+                this.expectedAmount = fields.expectedAmount;
+            }
+        }
+    }
+     ESCROW_ACCOUNT_DATA_LAYOUT
+    const EscrowSchema = new Map([
+        [EscrowAccount, {kind: 'struct', fields: [['is_initialized', 'bool']]}],
+    ]);
+    const GREETING_SIZE = borsh.serialize(
+        EscrowSchema,
+        new EscrowAccount(),
+    ).length;
+
+    const encodedEscrowState = await connection.getAccountInfo(escrowAccount.publicKey, 'singleGossip');
+    if (encodedEscrowState === null) {
+        throw 'Error: cannot find the escrow account';
+    }
+    const escrow = borsh.deserialize(
+        EscrowSchema,
+        EscrowAccount,
+        encodedEscrowState.data,
+    );
+    
+    console.log(escrow)
+    // return escrow
     return {
-        escrowAccountPubkey: escrowAccount.publicKey.toBase58(),
-        isInitialized: !!decodedEscrowState.isInitialized,
-        initializerAccountPubkey: new PublicKey(decodedEscrowState.initializerPubkey).toBase58(),
-        XTokenTempAccountPubkey: new PublicKey(decodedEscrowState.initializerTempTokenAccountPubkey).toBase58(),
-        initializerYTokenAccount: new PublicKey(decodedEscrowState.initializerReceivingTokenAccountPubkey).toBase58(),
-        expectedAmount: new BN(decodedEscrowState.expectedAmount, 10, "le").toNumber()
+        escrowAccountPubkey: escrow.escrowAccountPubkey,//.toString(),
+        isInitialized: escrow.isInitialized,
+        initializerAccountPubkey: escrow.initializerAccountPubkey,//.toString(),
+        XTokenTempAccountPubkey: escrow.XTokenTempAccountPubkey,//.toString(),
+        initializerYTokenAccount: escrow.initializerYTokenAccount,//.toString(),
+        expectedAmount: escrow.expectedAmount
     };
 }

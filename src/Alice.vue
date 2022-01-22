@@ -123,11 +123,11 @@ export default defineComponent({
           formState.amountYTokensAliceExpects,
           formState.programId
         );
-        escrowState.escrowAccountPubkey = escrowAccountPubkey;
+        escrowState.escrowAccountPubkey = escrowAccountPubkey.toString();
         escrowState.isInitialized = isInitialized;
-        escrowState.initializerAccountPubkey = initializerAccountPubkey;
-        escrowState.XTokenTempAccountPubkey = XTokenTempAccountPubkey;
-        escrowState.initializerYTokenAccount = initializerYTokenAccount;
+        escrowState.initializerAccountPubkey = initializerAccountPubkey.toString();
+        escrowState.XTokenTempAccountPubkey = XTokenTempAccountPubkey.toString();
+        escrowState.initializerYTokenAccount = initializerYTokenAccount.toString();
         escrowState.expectedAmount = expectedAmount;
       } catch(err) {
         if (err instanceof Error) {
