@@ -1,0 +1,32 @@
+{
+    "program": {
+        "id" : "",
+        "feePayerPrivateKeyArray" : "<byte-array without [], e.g. 1,10,2,11,...,21 "
+    },
+    "escrow" : {
+        "escrowAccountPubkey" : ""
+    },
+    "initializer": {
+        "privateKeyArray" : "<byte-array without [], e.g. 1,10,2,11,...,21 ",
+        "publicKey" : "",
+        "xTokenAccountPubkey": "",
+        "yTokenAccountPubkey": "",
+        "xTokensToSend": 0,
+        "yTokensExpected": 0
+
+    },
+    "taker" : {
+        "privateKeyArray" : "<byte-array without [], e.g. 1,10,2,11,...,21 ",
+        "publicKey" : "",
+        "xTokenAccountPubkey": "",
+        "yTokenAccountPubkey": "",
+        "xTokensExpected": 0,
+        "yTokensToSend": 0
+    },
+    "xMint": {
+        "account": ""
+    },
+    "yMint": {
+        "account" : ""
+    }
+}

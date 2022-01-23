@@ -38,24 +38,26 @@
 import { defineComponent, reactive } from 'vue';
 import { takeTrade } from "./util/takeTrade";
 
+import testData from "./test_data.local.json";
+
 export default defineComponent({
     setup() {
         const formState = reactive({
-            privateKey: "",
-            programId: "",
-            takerXAccAddress: "",
-            takerYAccAddress: "",
-            escrowAccAddress: "",
-            XTokenExpectedAmount: 0
+            privateKey: testData.program.feePayerPrivateKeyArray,
+            programId: testData.program.id,
+            takerXAccAddress: testData.taker.xTokenAccountPubkey,
+            takerYAccAddress: testData.taker.yTokenAccountPubkey,
+            escrowAccAddress: testData.escrow.escrowAccountPubkey, // <-- generated at inialization
+            XTokenExpectedAmount: testData.taker.xTokensExpected
         })
 
         const resetUI = () => {
-          formState.privateKey = "";
-          formState.programId = "";
-          formState.takerXAccAddress = "",
-          formState.takerYAccAddress = "",
-          formState.escrowAccAddress = "",
-          formState.XTokenExpectedAmount = 0
+          formState.privateKey = testData.program.feePayerPrivateKeyArray;
+          formState.programId = testData.program.id;
+          formState.takerXAccAddress = testData.taker.xTokenAccountPubkey,
+          formState.takerYAccAddress = testData.taker.yTokenAccountPubkey,
+          formState.escrowAccAddress = testData.escrow.escrowAccountPubkey,
+          formState.XTokenExpectedAmount = testData.taker.xTokensExpected
         }
         
         const onTakeTrade = async () => {

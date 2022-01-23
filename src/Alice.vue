@@ -76,15 +76,17 @@ interface EscrowState {
     expectedAmount: null | number;
 }
 
+import testData from "./test_data.local.json";
+
 export default defineComponent({
   setup() {
     const formState = reactive({
-      privateKey: "",
-      programId: "",
-      aliceXTokenAccountPubkey: "",
-      aliceYTokenAccountPubkey: "",
-      amountXTokensToSendToEscrow: 0,
-      amountYTokensAliceExpects: 0
+      privateKey: testData.program.feePayerPrivateKeyArray,
+      programId: testData.program.id,
+      aliceXTokenAccountPubkey: testData.initializer.xTokenAccountPubkey,
+      aliceYTokenAccountPubkey: testData.initializer.yTokenAccountPubkey,
+      amountXTokensToSendToEscrow: testData.initializer.xTokensToSend,
+      amountYTokensAliceExpects: testData.initializer.yTokensExpected
     })
 
     const escrowState: EscrowState = reactive({
@@ -97,12 +99,12 @@ export default defineComponent({
     });
 
     const resetAliceUI = () => {
-      formState.privateKey = "";
-      formState.programId = "";
-      formState.aliceXTokenAccountPubkey = "";
-      formState.aliceYTokenAccountPubkey = "";
-      formState.amountXTokensToSendToEscrow = 0;
-      formState.amountYTokensAliceExpects = 0;
+      formState.privateKey = testData.program.feePayerPrivateKeyArray;
+      formState.programId = testData.program.id;
+      formState.aliceXTokenAccountPubkey = testData.initializer.xTokenAccountPubkey;
+      formState.aliceYTokenAccountPubkey = testData.initializer.yTokenAccountPubkey;
+      formState.amountXTokensToSendToEscrow = testData.initializer.xTokensToSend;
+      formState.amountYTokensAliceExpects = testData.initializer.yTokensExpected;
       Object.keys(escrowState).forEach(key => escrowState[key as keyof EscrowState] = null);
     }
 
@@ -123,11 +125,12 @@ export default defineComponent({
           formState.amountYTokensAliceExpects,
           formState.programId
         );
-        escrowState.escrowAccountPubkey = escrowAccountPubkey.toString();
+
+        escrowState.escrowAccountPubkey = escrowAccountPubkey//.toString();
         escrowState.isInitialized = isInitialized;
-        escrowState.initializerAccountPubkey = initializerAccountPubkey.toString();
-        escrowState.XTokenTempAccountPubkey = XTokenTempAccountPubkey.toString();
-        escrowState.initializerYTokenAccount = initializerYTokenAccount.toString();
+        escrowState.initializerAccountPubkey = initializerAccountPubkey//.toString();
+        escrowState.XTokenTempAccountPubkey = XTokenTempAccountPubkey//.toString();
+        escrowState.initializerYTokenAccount = initializerYTokenAccount//.toString();
         escrowState.expectedAmount = expectedAmount;
       } catch(err) {
         if (err instanceof Error) {

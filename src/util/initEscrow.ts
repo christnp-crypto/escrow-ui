@@ -34,7 +34,7 @@ export const initEscrow = async (
     //@ts-expect-error
     const XTokenMintAccountPubkey = new PublicKey((await connection.getParsedAccountInfo(initializerXTokenAccountPubkey, 'singleGossip')).value!.data.parsed.info.mint);
 
-    const privateKeyDecoded = privateKeyByteArray.split(',').map(s => parseInt(s));
+    const privateKeyDecoded = privateKeyByteArray.split(',').map(s => parseInt(s)); // <-#,#,#,..# formatted
     const initializerAccount = new Account(privateKeyDecoded);
 
     const tempTokenAccount = new Account();
@@ -91,10 +91,10 @@ export const initEscrow = async (
     //     expectedAmount: new BN(decodedEscrowState.expectedAmount, 10, "le").toNumber()
     // };
 
-    /* playing with borsh */
-    /**
-     * Borsh schema definition for greeting accounts
-     */
+    
+    // playing with borsh 
+    
+    // Borsh schema definition for greeting accounts
     // The state of a greeting account managed by the hello world program
     class EscrowAccount {
         isInitialized = false;
@@ -143,11 +143,12 @@ export const initEscrow = async (
     console.log(escrow)
     // return escrow
     return {
-        escrowAccountPubkey: escrow.escrowAccountPubkey,//.toString(),
+        escrowAccountPubkey: escrow.escrowAccountPubkey.toBase58(),
         isInitialized: escrow.isInitialized,
-        initializerAccountPubkey: escrow.initializerAccountPubkey,//.toString(),
-        XTokenTempAccountPubkey: escrow.XTokenTempAccountPubkey,//.toString(),
-        initializerYTokenAccount: escrow.initializerYTokenAccount,//.toString(),
+        initializerAccountPubkey: escrow.initializerAccountPubkey.toBase58(),
+        XTokenTempAccountPubkey: escrow.XTokenTempAccountPubkey.toBase58(),
+        initializerYTokenAccount: escrow.initializerYTokenAccount.toBase58(),
         expectedAmount: escrow.expectedAmount
     };
+    
 }
