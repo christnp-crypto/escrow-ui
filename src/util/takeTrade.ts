@@ -41,17 +41,8 @@ export const takeTrade = async (
     } catch (err) {
         throw new Error("Could not find escrow at given address!")
     }
-    // const decodedEscrowLayout = ESCROW_ACCOUNT_DATA_LAYOUT.decode(encodedEscrowState) as EscrowLayout;
-    // const escrowState =  {
-    //     escrowAccountPubkey: escrowAccountPubkey,
-    //     isInitialized: !!decodedEscrowLayout.isInitialized,
-    //     initializerAccountPubkey: new PublicKey(decodedEscrowLayout.initializerPubkey),
-    //     XTokenTempAccountPubkey: new PublicKey(decodedEscrowLayout.initializerTempTokenAccountPubkey),
-    //     initializerYTokenAccount: new PublicKey(decodedEscrowLayout.initializerReceivingTokenAccountPubkey),
-    //     expectedAmount: new BN(decodedEscrowLayout.expectedAmount, 10, "le")
-    // };
+    // Use Borsh to deserialze the account state
     const escrowState = deserialize(STATE_SCHEMA, StatePayload, Buffer.from(encodedEscrowState));
-    console.log("escrowState: ", escrowState)
 
     const PDA = await PublicKey.findProgramAddress([Buffer.from("escrow")], programId);
 
@@ -62,15 +53,13 @@ export const takeTrade = async (
         value:  takerExpectedXTokenAmount.toString()   // 'ts first value'
 
     });
-
-    // Serialize the payload
+    // Use Borsh to serialize the payload
     const exchangeSerBuf = Buffer.from(serialize(INSTRUCTION_SCHEMA, eschangePayload));
-    console.log("initEscrowSerBuf: ", exchangeSerBuf)
-    // => <Buffer 01 06 00 00 00 74 73 20 6b 65 79 0e 00 00 00 74 73 20 66 69 72 73 74 20 76 61 6c 75 65>
-    let exchangeSerBufCopy = deserialize(INSTRUCTION_SCHEMA, InstructionPayload, exchangeSerBuf)
-    console.log("initEscrowPayloadCopy: ", exchangeSerBufCopy)
-    // => Payload { id: 1, key: 'ts key', value: 'ts first value' }
-
+    // testing serialization
+    // let exchangeSerBufCopy = deserialize(INSTRUCTION_SCHEMA, InstructionPayload, exchangeSerBuf)
+    // console.log("initEscrowSerBuf: ", exchangeSerBuf)
+    // console.log("initEscrowPayloadCopy: ", exchangeSerBufCopy)
+    // // => Payload { id: 1, key: 'ts key', value: 'ts first value' }
 
     const exchangeInstruction = new TransactionInstruction({
         programId,
@@ -80,14 +69,15 @@ export const takeTrade = async (
             { pubkey: takerAccount.publicKey, isSigner: true, isWritable: false },
             { pubkey: takerYTokenAccountPubkey, isSigner: false, isWritable: true },
             { pubkey: takerXTokenAccountPubkey, isSigner: false, isWritable: true },
-            { pubkey: escrowState.XTokenTempAccountPubkey, isSigner: false, isWritable: true},
-            { pubkey: escrowState.initializerAccountPubkey, isSigner: false, isWritable: true},
-            { pubkey: escrowState.initializerYTokenAccount, isSigner: false, isWritable: true},
+            { pubkey: new PublicKey(escrowState.XTokenTempAccountPubkey), isSigner: false, isWritable: true},
+            { pubkey: new PublicKey(escrowState.initializerAccountPubkey), isSigner: false, isWritable: true},
+            { pubkey: new PublicKey(escrowState.initializerYTokenAccount), isSigner: false, isWritable: true},
             { pubkey: escrowAccountPubkey, isSigner: false, isWritable: true },
             { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
             { pubkey: PDA[0], isSigner: false, isWritable: false}
         ] 
     })    
-
     await connection.sendTransaction(new Transaction().add(exchangeInstruction), [takerAccount], {skipPreflight: false, preflightCommitment: 'singleGossip'});
+    console.log('Successfully transferred %s from %s to %s', escrowState.expectedAmount.toString(), takerYTokenAccountPubkey.toBase58(), new PublicKey(escrowState.initializerYTokenAccount ).toBase58())
+    console.log('Successfully received %s in %s from %s', takerExpectedXTokenAmount.toString(), takerXTokenAccountPubkey.toBase58(),new PublicKey(escrowState.XTokenTempAccountPubkey).toBase58())
 }

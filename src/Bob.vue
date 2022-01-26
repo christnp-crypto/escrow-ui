@@ -43,7 +43,7 @@ import testData from "./test_data.local.json";
 export default defineComponent({
     setup() {
         const formState = reactive({
-            privateKey: testData.program.feePayerPrivateKeyArray,
+            privateKey: testData.taker.privateKeyArray,
             programId: testData.program.id,
             takerXAccAddress: testData.taker.xTokenAccountPubkey,
             takerYAccAddress: testData.taker.yTokenAccountPubkey,
@@ -52,7 +52,7 @@ export default defineComponent({
         })
 
         const resetUI = () => {
-          formState.privateKey = testData.program.feePayerPrivateKeyArray;
+          formState.privateKey = testData.taker.privateKeyArray;
           formState.programId = testData.program.id;
           formState.takerXAccAddress = testData.taker.xTokenAccountPubkey,
           formState.takerYAccAddress = testData.taker.yTokenAccountPubkey,

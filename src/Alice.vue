@@ -81,7 +81,7 @@ import testData from "./test_data.local.json";
 export default defineComponent({
   setup() {
     const formState = reactive({
-      privateKey: testData.program.feePayerPrivateKeyArray,
+      privateKey: testData.initializer.privateKeyArray,
       programId: testData.program.id,
       aliceXTokenAccountPubkey: testData.initializer.xTokenAccountPubkey,
       aliceYTokenAccountPubkey: testData.initializer.yTokenAccountPubkey,
@@ -99,7 +99,7 @@ export default defineComponent({
     });
 
     const resetAliceUI = () => {
-      formState.privateKey = testData.program.feePayerPrivateKeyArray;
+      formState.privateKey = testData.initializer.privateKeyArray;
       formState.programId = testData.program.id;
       formState.aliceXTokenAccountPubkey = testData.initializer.xTokenAccountPubkey;
       formState.aliceYTokenAccountPubkey = testData.initializer.yTokenAccountPubkey;

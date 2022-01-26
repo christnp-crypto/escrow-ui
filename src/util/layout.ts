@@ -66,9 +66,9 @@ export const STATE_SCHEMA = new Map([ // <-- program state
             kind: 'struct', 
             fields: [
                 ['is_initialized', 'u8'],
-                ['initializer_pubkey',[32]], // <-- PubKey buffer
-                ['temp_token_account_pubkey',[32]], // <-- PubKey buffer
-                ['initializer_token_to_receive_account_pubkey',[32]], // <-- PubKey buffer
+                ['initializerAccountPubkey',[32]], // <-- PubKey buffer
+                ['XTokenTempAccountPubkey',[32]], // <-- PubKey buffer
+                ['initializerYTokenAccount',[32]], // <-- PubKey buffer
                 ['expectedAmount','u64']
     ]}],
 ]);
@@ -88,13 +88,14 @@ export const INSTRUCTION_SCHEMA = new Map([ // <-- program instruction
     ]
 ]);
 
-
+/*
+ * Supported Instruction Types
+ */ 
 // Instruction variant indexes
 export enum INSTRUCTION_TYPES {
     InitializeEscrow = 0,
     Exchange,
-    // TransferKeypair,
-    // BurnKeypair,
+    // FutureInsructions,
 }
 
 
