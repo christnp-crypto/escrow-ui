@@ -1,7 +1,23 @@
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Account, Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { 
+    Account, 
+    Connection, 
+    PublicKey, 
+    Transaction, 
+    TransactionInstruction 
+} from "@solana/web3.js";
 import BN from "bn.js";
-import { ESCROW_ACCOUNT_DATA_LAYOUT, EscrowLayout } from "./layout"; 
+import { 
+    ESCROW_ACCOUNT_DATA_LAYOUT, 
+    EscrowLayout,
+    StatePayload,
+    InstructionPayload,
+    INSTRUCTION_SCHEMA,
+    STATE_SCHEMA, 
+    INSTRUCTION_TYPES
+} from "./layout";
+
+import { serialize, deserialize, deserializeUnchecked } from 'borsh';
 
 const connection = new Connection("http://localhost:8899", 'singleGossip');
 
@@ -25,21 +41,41 @@ export const takeTrade = async (
     } catch (err) {
         throw new Error("Could not find escrow at given address!")
     }
-    const decodedEscrowLayout = ESCROW_ACCOUNT_DATA_LAYOUT.decode(encodedEscrowState) as EscrowLayout;
-    const escrowState =  {
-        escrowAccountPubkey: escrowAccountPubkey,
-        isInitialized: !!decodedEscrowLayout.isInitialized,
-        initializerAccountPubkey: new PublicKey(decodedEscrowLayout.initializerPubkey),
-        XTokenTempAccountPubkey: new PublicKey(decodedEscrowLayout.initializerTempTokenAccountPubkey),
-        initializerYTokenAccount: new PublicKey(decodedEscrowLayout.initializerReceivingTokenAccountPubkey),
-        expectedAmount: new BN(decodedEscrowLayout.expectedAmount, 10, "le")
-    };
+    // const decodedEscrowLayout = ESCROW_ACCOUNT_DATA_LAYOUT.decode(encodedEscrowState) as EscrowLayout;
+    // const escrowState =  {
+    //     escrowAccountPubkey: escrowAccountPubkey,
+    //     isInitialized: !!decodedEscrowLayout.isInitialized,
+    //     initializerAccountPubkey: new PublicKey(decodedEscrowLayout.initializerPubkey),
+    //     XTokenTempAccountPubkey: new PublicKey(decodedEscrowLayout.initializerTempTokenAccountPubkey),
+    //     initializerYTokenAccount: new PublicKey(decodedEscrowLayout.initializerReceivingTokenAccountPubkey),
+    //     expectedAmount: new BN(decodedEscrowLayout.expectedAmount, 10, "le")
+    // };
+    const escrowState = deserialize(STATE_SCHEMA, StatePayload, Buffer.from(encodedEscrowState));
+    console.log("escrowState: ", escrowState)
 
     const PDA = await PublicKey.findProgramAddress([Buffer.from("escrow")], programId);
 
+     // Construct the payload
+     const eschangePayload = new InstructionPayload({
+        id:     INSTRUCTION_TYPES.Exchange,
+        key:    '',                         // 'ts key'
+        value:  takerExpectedXTokenAmount.toString()   // 'ts first value'
+
+    });
+
+    // Serialize the payload
+    const exchangeSerBuf = Buffer.from(serialize(INSTRUCTION_SCHEMA, eschangePayload));
+    console.log("initEscrowSerBuf: ", exchangeSerBuf)
+    // => <Buffer 01 06 00 00 00 74 73 20 6b 65 79 0e 00 00 00 74 73 20 66 69 72 73 74 20 76 61 6c 75 65>
+    let exchangeSerBufCopy = deserialize(INSTRUCTION_SCHEMA, InstructionPayload, exchangeSerBuf)
+    console.log("initEscrowPayloadCopy: ", exchangeSerBufCopy)
+    // => Payload { id: 1, key: 'ts key', value: 'ts first value' }
+
+
     const exchangeInstruction = new TransactionInstruction({
         programId,
-        data: Buffer.from(Uint8Array.of(1, ...new BN(takerExpectedXTokenAmount).toArray("le", 8))),
+        // data: Buffer.from(Uint8Array.of(1, ...new BN(takerExpectedXTokenAmount).toArray("le", 8))),
+        data: exchangeSerBuf,
         keys: [
             { pubkey: takerAccount.publicKey, isSigner: true, isWritable: false },
             { pubkey: takerYTokenAccountPubkey, isSigner: false, isWritable: true },
